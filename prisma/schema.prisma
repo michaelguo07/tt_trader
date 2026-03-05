@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String?
+  image         String?
+  bio           String?
+  locationLabel String?   // e.g. "Berlin, Germany"
+  latitude      Float?
+  longitude     Float?
+  showApproximateOnly Boolean @default(false)
+  isReseller    Boolean   @default(false)
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  listings       Listing[]
+  trades         Trade[]
+  favourites     Favourite[]
+  savedSearches  SavedSearch[]
+  reviewsGiven   Review[]   @relation("ReviewsGiven")
+  reviewsReceived Review[]   @relation("ReviewsReceived")
+  reportsCreated Report[]
+  messagesSent   Message[]  @relation("MessagesSent")
+  messagesReceived Message[] @relation("MessagesReceived")
+  matchNotifications MatchNotification[]
+}
+
+model Listing {
+  id              String   @id @default(cuid())
+  title           String
+  description     String
+  category        String   // Blades, Rubbers, Balls, Bags, Shoes, Clothing, Tables & nets, Other
+  condition       String   // New, Like new, Used, For parts
+  price           Float
+  currency        String   @default("EUR")
+  status          String   @default("active") // active, sold, removed
+  locationLabel   String?
+  latitude        Float?
+  longitude       Float?
+  maxDistanceKm   Float?   // null = willing to ship anywhere; 0 = pickup only
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  sellerId        String
+  seller          User     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  imageUrls       String   // JSON array of URLs
+  favourites      Favourite[]
+  reports         Report[]
+}
+
+model Trade {
+  id           String   @id @default(cuid())
+  haveText     String   // "I have: ..."
+  wantText     String   // "I want: ..."
+  note         String?
+  category     String?
+  locationLabel String?
+  latitude     Float?
+  longitude    Float?
+  maxDistanceKm Float?
+  status       String   @default("active") // active, completed, removed
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  reports      Report[]
+}
+
+model Favourite {
+  id        DateTime @id @default(now())
+  userId    String
+  listingId String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
+}
+
+model SavedSearch {
+  id          String   @id @default(cuid())
+  userId      String
+  query       String?
+  category    String?
+  condition   String?
+  minPrice    Float?
+  maxPrice    Float?
+  maxDistanceKm Float?
+  latitude    Float?
+  longitude   Float?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  rating     Int      // 1-5
+  comment    String?
+  createdAt  DateTime @default(now())
+  reviewerId String
+  revieweeId String
+  listingId  String?  // optional: review for a specific sale
+  reviewer   User     @relation("ReviewsGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
+  reviewee   User     @relation("ReviewsReceived", fields: [revieweeId], references: [id], onDelete: Cascade)
+
+  @@index([revieweeId])
+}
+
+model Report {
+  id         String   @id @default(cuid())
+  reason     String
+  details    String?
+  status     String   @default("pending") // pending, reviewed, dismissed
+  createdAt  DateTime @default(now())
+  reporterId String
+  listingId  String?
+  tradeId    String?
+  userId     String?  // reported user (for user reports)
+  reporter   User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  listing    Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  trade      Trade?   @relation(fields: [tradeId], references: [id], onDelete: SetNull)
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  body      String
+  createdAt DateTime @default(now())
+  readAt    DateTime?
+  senderId  String
+  receiverId String
+  sender    User     @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver  User     @relation("MessagesReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+  threadId  String   // grouping: e.g. listingId or "trade-{tradeId}" or "user-{otherUserId}"
+
+  @@index([receiverId, threadId])
+  @@index([senderId, threadId])
+}
+
+model MatchNotification {
+  id         String   @id @default(cuid())
+  userId     String
+  listingId  String?
+  tradeId    String?
+  message    String
+  readAt     DateTime?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
