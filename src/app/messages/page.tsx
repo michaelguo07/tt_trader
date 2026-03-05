@@ -18,7 +18,7 @@ export default async function MessagesPage() {
     select: { threadId: true },
     distinct: ['threadId'],
   });
-  const threadIds = [...new Set([...sent.map((m) => m.threadId), ...received.map((m) => m.threadId)])];
+  const threadIds = Array.from(new Set([...sent.map((m) => m.threadId), ...received.map((m) => m.threadId)]));
   const threads: { threadId: string; other: { id: string; name: string | null }; lastMessage: string; lastAt: Date }[] = [];
   for (const tid of threadIds) {
     const last = await prisma.message.findFirst({
