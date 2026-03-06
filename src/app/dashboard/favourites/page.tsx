@@ -29,11 +29,12 @@ export default async function FavouritesPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {listings.map((l) => {
-            const imageUrls = (JSON.parse((l.imageUrls as string) || '[]') as string[]);
+            const listing = l as typeof l & { seller?: { locationLabel?: string | null } };
+            const imageUrls = (JSON.parse((listing.imageUrls as string) || '[]') as string[]);
             return (
               <Link
-                key={l.id}
-                href={`/listings/${l.id}`}
+                key={listing.id}
+                href={`/listings/${listing.id}`}
                 className="block border border-stone-200 rounded-lg overflow-hidden bg-white hover:shadow-md transition"
               >
                 <div className="aspect-[4/3] bg-stone-100 flex items-center justify-center">
@@ -44,9 +45,9 @@ export default async function FavouritesPage() {
                   )}
                 </div>
                 <div className="p-3">
-                  <h3 className="font-medium truncate">{l.title}</h3>
-                  <p className="text-primary-600 font-semibold">{l.currency} {l.price.toFixed(2)}</p>
-                  <p className="text-stone-500 text-sm">{l.seller.locationLabel ?? '—'}</p>
+                  <h3 className="font-medium truncate">{listing.title}</h3>
+                  <p className="text-primary-600 font-semibold">{listing.currency} {listing.price.toFixed(2)}</p>
+                  <p className="text-stone-500 text-sm">{listing.seller?.locationLabel ?? '—'}</p>
                 </div>
               </Link>
             );
