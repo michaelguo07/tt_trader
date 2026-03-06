@@ -5,7 +5,7 @@ Table tennis buy, sell & trade marketplace. Users can list items, post trades (h
 ## Stack
 
 - **Next.js 14** (App Router), TypeScript, Tailwind CSS
-- **Prisma** + SQLite (dev); switch to PostgreSQL in production by changing `datasource` in `prisma/schema.prisma` and `DATABASE_URL`
+- **Prisma** + PostgreSQL (use a free hosted Postgres for both local and production, e.g. Neon or Vercel Postgres)
 - **NextAuth.js** (credentials: email + password)
 - **Geocoding**: Nominatim (OpenStreetMap) for location → lat/lng
 
@@ -31,6 +31,31 @@ Table tennis buy, sell & trade marketplace. Users can list items, post trades (h
 ## Admin
 
 Set `ADMIN_USER_ID` in `.env` to your user’s id (from DB or profile). Then visit `/admin/reports` to review and dismiss/remove reported content.
+
+## Deploy to Vercel
+
+1. **Create a Postgres database** (required – SQLite doesn’t work on Vercel):
+   - [Vercel Postgres](https://vercel.com/storage/postgres) (same dashboard), or
+   - [Neon](https://neon.tech) or [Supabase](https://supabase.com) (free tier).
+   Copy the connection string (e.g. `postgresql://...`).
+
+2. **Import the repo in Vercel**: [vercel.com/new](https://vercel.com/new) → Import your GitHub repo (e.g. `tt_trader`).
+
+3. **Environment variables** (Vercel → Project → Settings → Environment Variables):
+   - `DATABASE_URL` = your Postgres connection string
+   - `NEXTAUTH_SECRET` = run `openssl rand -base64 32` and paste the result
+   - `NEXTAUTH_URL` = your live URL, e.g. `https://tt-trader.vercel.app` (Vercel shows it after first deploy)
+
+4. **Deploy**: Click Deploy. After the first deploy, run the DB migration from your machine once (see below), then the site will work.
+
+5. **Run migrations against production DB**:  
+   Set `DATABASE_URL` in your local `.env` to the **production** Postgres URL, then run:
+   ```bash
+   npx prisma db push
+   ```
+   (Or use Vercel’s “Run command” / a one-off script if you prefer.)
+
+For local development, use the same Postgres URL in `.env` or a separate Neon/Supabase database.
 
 ## Scripts
 
