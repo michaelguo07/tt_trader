@@ -5,13 +5,19 @@ import { prisma } from '@/lib/prisma';
 import { ListingsNearYou } from '@/components/ListingsNearYou';
 
 export default async function HomePage() {
-  const session = await getServerSession(authOptions);
-  const recentListings = await prisma.listing.findMany({
-    where: { status: 'active' },
-    take: 6,
-    orderBy: { createdAt: 'desc' },
-    include: { seller: { select: { name: true, locationLabel: true } } },
-  });
+  let session = null;
+  let recentListings: Awaited<ReturnType<typeof prisma.listing.findMany>> = [];
+  try {
+    session = await getServerSession(authOptions);
+    recentListings = await prisma.listing.findMany({
+      where: { status: 'active' },
+      take: 6,
+      orderBy: { createdAt: 'desc' },
+      include: { seller: { select: { name: true, locationLabel: true } } },
+    });
+  } catch (e) {
+    console.error('HomePage DB error:', e);
+  }
 
   return (
     <div className="max-w-4xl mx-auto">
