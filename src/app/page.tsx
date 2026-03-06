@@ -6,7 +6,9 @@ import { ListingsNearYou } from '@/components/ListingsNearYou';
 
 export default async function HomePage() {
   let session = null;
-  let recentListings: Awaited<ReturnType<typeof prisma.listing.findMany>> = [];
+  let recentListings: Awaited<ReturnType<typeof prisma.listing.findMany<{
+    include: { seller: { select: { name: true; locationLabel: true } } };
+  }>>> = [];
   try {
     session = await getServerSession(authOptions);
     recentListings = await prisma.listing.findMany({
@@ -68,7 +70,7 @@ export default async function HomePage() {
                   <p className="text-primary-600 font-semibold">
                     {l.currency} {l.price.toFixed(2)}
                   </p>
-                  <p className="text-stone-500 text-sm">{l.seller.locationLabel ?? '—'}</p>
+                  <p className="text-stone-500 text-sm">{l.seller?.locationLabel ?? '—'}</p>
                 </div>
               </Link>
             );

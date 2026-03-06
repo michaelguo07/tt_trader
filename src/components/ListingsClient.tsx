@@ -244,7 +244,7 @@ export function ListingsClient({ isLoggedIn = false }: { isLoggedIn?: boolean })
                   <p className="text-primary-600 font-semibold">
                     {l.currency} {l.price.toFixed(2)}
                   </p>
-                  <p className="text-stone-500 text-sm">{l.locationLabel ?? l.seller.locationLabel ?? '—'}</p>
+                  <p className="text-stone-500 text-sm">{l.locationLabel ?? l.seller?.locationLabel ?? '—'}</p>
                   {l._distanceKm != null && (
                     <p className="text-stone-500 text-xs">~{Math.round(l._distanceKm)} km away</p>
                   )}
